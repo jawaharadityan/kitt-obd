@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<meta name="description" content="Read-only OBD-II live dashboard for ELM327 Bluetooth adapters">
+<title>K.I.T.T. OBD</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="offline">
+<header class="top">
+  <div class="brand">
+    <div class="voicebox" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div>
+      <h1>K.I.T.T.</h1>
+      <p>ON-BOARD DIAGNOSTICS · READ-ONLY</p>
+    </div>
+  </div>
+  <div class="scanner" aria-hidden="true"><span></span></div>
+  <dl class="chips">
+    <div><dt><span id="dot" class="dot"></span></dt><dd id="conn">—</dd></div>
+    <div><dt>ADAPTER</dt><dd id="adapter">—</dd></div>
+    <div><dt>LINK</dt><dd id="protocol">—</dd></div>
+    <div><dt>RATE</dt><dd id="hz">—</dd></div>
+    <div><button id="btn-report" type="button" title="Save adapter, protocol and supported-readings info (no VIN)">SAVE REPORT</button>
+      <button id="btn-disconnect" type="button" hidden>DISCONNECT</button></div>
+  </dl>
+</header>
+
+<main>
+  <section id="banner" class="banner">
+    <div class="banner-icon">◇</div>
+    <div>
+      <h2 id="banner-title">NOT CONNECTED</h2>
+      <p id="banner-sub">—</p>
+    </div>
+  </section>
+
+  <section id="controls" class="controls">
+    <button id="btn-connect" class="primary" type="button">CONNECT ADAPTER</button>
+    <button id="btn-demo" type="button">DEMO MODE</button>
+  </section>
+
+  <div id="notice" class="notice" hidden><span class="dot amber"></span><span id="notice-text"></span></div>
+
+  <section class="gauges">
+    <div class="card big" id="g-rpm"></div>
+    <div class="card big" id="g-speed"></div>
+    <div class="card" id="g-coolant"></div>
+    <div class="card" id="g-battery"></div>
+    <div class="card" id="g-load"></div>
+  </section>
+
+  <section class="lower">
+    <div class="card panel">
+      <h3>LIVE DATA</h3>
+      <table class="readouts" id="readouts"></table>
+    </div>
+    <div class="card panel dtc">
+      <div class="panel-head">
+        <h3>TROUBLE CODES</h3>
+        <button id="rescan" type="button" title="Re-read Mode 03 and Mode 07 (read-only)">RESCAN</button>
+      </div>
+      <label class="make-row">VEHICLE MAKE
+        <select id="make" aria-label="Vehicle make for manufacturer-specific codes"><option value="">Not set</option></select>
+      </label>
+      <p id="make-note" class="make-note" hidden></p>
+      <h4>ACTIVE / STORED <small>(Mode 03)</small></h4>
+      <ul id="dtc-stored" class="dtc-list"><li class="none">—</li></ul>
+      <h4>PENDING <small>(Mode 07)</small></h4>
+      <ul id="dtc-pending" class="dtc-list"><li class="none">—</li></ul>
+      <p class="muted" id="dtc-time"></p>
+    </div>
+  </section>
+</main>
+
+<footer>FAULT-CODE TEXT INCLUDES DATA FROM <a href="https://github.com/Wal33D/dtc-database">WAL33D/DTC-DATABASE</a> (MIT)<br>READ-ONLY · MODE 01 / 03 / 07 ONLY · NO CLEAR (MODE 04) OR WRITE COMMANDS ARE EVER SENT TO THE VEHICLE</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
