@@ -172,3 +172,4 @@ footer a { color: var(--muted); }
 .pair-help ol { margin: 0 0 14px; padding-left: 20px; font-size: 13px; line-height: 1.6; }
 .pair-help li { margin-bottom: 6px; }
 .pair-help b { color: var(--amber); font-weight: 600; }
+.dtc-desc small a { color: var(--amber); }

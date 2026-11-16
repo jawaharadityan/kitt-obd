@@ -6,7 +6,7 @@ import { DemoVehicle } from "./demo.js";
 const $ = (id) => document.getElementById(id);
 const DTC_INTERVAL = 30000;
 const serialOK = "serial" in navigator;
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "1.3.2";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Friendlier labels for makes in the code database (value stays the database key).
 const MAKE_LABEL = { Suzuki: "Maruti Suzuki / Suzuki", Chevy: "Chevrolet" };
@@ -88,10 +88,16 @@ const READOUTS = [
 ];
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+// Web search for codes the database can't explain (manufacturer-specific or missing).
+function lookupLink(d) {
+  if (d.generic && !/not in database/.test(d.note)) return "";
+  const q = `${make === "Suzuki" ? "Maruti Suzuki" : make || "OBD2"} ${d.code} fault code`;
+  return ` · <a href="https://www.google.com/search?q=${encodeURIComponent(q)}" target="_blank" rel="noopener">look up</a>`;
+}
 function renderDtcList(id, list, cls) {
   $(id).innerHTML = !list.length ? `<li class="none">No codes</li>` : list.map((d) => `<li class="${cls}">
     <span class="dtc-code">${esc(d.code)}</span>
-    <span class="dtc-desc">${esc(d.description)}<small>${esc(d.system)} · ${esc(d.note)}</small></span>
+    <span class="dtc-desc">${esc(d.description)}<small>${esc(d.system)} · ${esc(d.note)}${lookupLink(d)}</small></span>
     <span class="sev ${esc(d.severity)}">${esc(d.severity.toUpperCase())}</span></li>`).join("");
 }
 
@@ -153,11 +159,15 @@ function render() {
       : p ? `${p} PENDING CODE${p > 1 ? "S" : ""}` : "SCAN COMPLETE — NO FAULTS DETECTED";
     $("banner-sub").textContent = `MIL: ${st ? (st.mil ? "ON" : "OFF") : "?"} · stored ${n} · pending ${p} · read-only`;
   }
-  const key = JSON.stringify([d.stored, d.pending, make, adapterOnly]);
+  const key = JSON.stringify([d.stored, d.pending, make, adapterOnly, !!d.read_at]);
   if (key !== lastDtcKey) {
     lastDtcKey = key;
     if (adapterOnly) {
       for (const id of ["dtc-stored", "dtc-pending"]) $(id).innerHTML = `<li class="none muted-li">Not available — car not responding</li>`;
+    } else if (!d.read_at) {
+      // Never show a green "No codes" before the car has actually been scanned.
+      const txt = online ? "Reading…" : "Not scanned yet — connect the adapter";
+      for (const id of ["dtc-stored", "dtc-pending"]) $(id).innerHTML = `<li class="none muted-li">${txt}</li>`;
     } else {
       renderDtcList("dtc-stored", d.stored.map((c) => describe(c, make)), "stored");
       renderDtcList("dtc-pending", d.pending.map((c) => describe(c, make)), "pending");
