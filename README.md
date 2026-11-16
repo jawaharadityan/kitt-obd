@@ -3,7 +3,24 @@
 Read-only OBD-II dashboard that runs entirely in Chrome on Android (tested layout for Galaxy S24 Ultra)
 and talks **directly** to a Bluetooth Classic ELM327 adapter. No server, no Mac, works offline once installed.
 
-## Install on the phone
+## Android app (APK)
+Use this if Chrome's device picker says "No compatible devices found". The app uses the same dashboard,
+but connects to the paired adapter directly through Android Bluetooth, the way Torque does.
+
+1. Download **kitt-obd.apk** from
+   https://github.com/jawaharadityan/kitt-obd/releases/download/apk-latest/kitt-obd.apk
+2. Open it. Android will ask you to allow installs from Chrome or Files: allow it for this install.
+3. Open **KITT OBD**, allow **Nearby devices**, tap **CONNECT ADAPTER** and pick **OBDII**. It reconnects
+   automatically next time.
+
+Built by GitHub Actions (`.github/workflows/android-apk.yml`) on every push to `main`. A new build installs
+as an update over the old one. The read-only allowlist is enforced twice: in `js/elm327.js` and again in
+native code (`ReadOnlyGuard.java`) before any byte reaches the adapter.
+
+**Signing:** the key (`android/kitt-obd.keystore`) is committed so CI can build updates without secrets.
+Anyone could sign an APK with it, so install only from this repository's Releases page.
+
+## Install on the phone (browser version)
 1. Android **Settings → Connections → Bluetooth**: pair the OBD adapter (PIN is usually `1234` or `0000`).
 2. Open the app URL in **Chrome** (not Samsung Internet). Use ⋮ → **Add to home screen → Install**.
 3. Ignition ON → open the app → **CONNECT ADAPTER** → pick the adapter. Chrome remembers it, so later

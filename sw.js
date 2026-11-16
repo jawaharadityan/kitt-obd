@@ -1,7 +1,7 @@
 // Offline app shell. Bump VERSION whenever any file changes so phones pick up the update.
-const VERSION = "kitt-obd-v7";
+const VERSION = "kitt-obd-v8";
 const SHELL = ["./", "index.html", "style.css", "manifest.webmanifest", "js/app.js", "js/elm327.js",
-  "js/gauge.js", "js/dtc.js", "js/demo.js", "data/dtc-db.json", "icons/icon-192.png", "icons/icon-512.png"];
+  "js/gauge.js", "js/dtc.js", "js/demo.js", "js/native.js", "data/dtc-db.json", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

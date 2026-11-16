@@ -2,11 +2,14 @@ import { Gauge } from "./gauge.js";
 import { SafeELM327, VehicleNotResponding, webSerialTransport, SPP_UUID, FAST_PIDS, SLOW_PIDS, PIDS, UNITS } from "./elm327.js";
 import { describe, loadDb, makes } from "./dtc.js";
 import { DemoVehicle } from "./demo.js";
+import { isNative, listPaired, nativeTransport } from "./native.js";
 
 const $ = (id) => document.getElementById(id);
 const DTC_INTERVAL = 30000;
-const serialOK = "serial" in navigator;
-const APP_VERSION = "1.3.2";
+const NATIVE = isNative();
+const serialOK = NATIVE || "serial" in navigator;
+const ADAPTER_KEY = "kitt-obd-adapter";
+const APP_VERSION = "1.4.0";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Friendlier labels for makes in the code database (value stays the database key).
 const MAKE_LABEL = { Suzuki: "Maruti Suzuki / Suzuki", Chevy: "Chevrolet" };
@@ -222,14 +225,14 @@ async function runDemo() {
   }
 }
 
-async function runLive(port) {
+async function runLive(openTransport) {
   await stop();
   const my = session;
   let attempt = 0;
   while (my === session) {
     try {
       update({ connection: "connecting", message: "Opening Bluetooth link to adapter…" });
-      elm = lastElm = new SafeELM327(await webSerialTransport(port));
+      elm = lastElm = new SafeELM327(await openTransport());
       update({ connection: "initialising", message: "Talking to the adapter…" });
       await elm.initAdapter();
       attempt = 0;
@@ -304,7 +307,7 @@ function buildReport() {
   const supportedHex = info ? [...info.supported].sort() : [];
   return {
     report: "KITT OBD connection report", app_version: APP_VERSION, generated_at: new Date().toISOString(),
-    browser: navigator.userAgent, demo: state.demo, connection: state.connection,
+    platform: NATIVE ? "android-app" : "web", browser: navigator.userAgent, demo: state.demo, connection: state.connection,
     vehicle_make_selected: make || null,
     adapter: { version: info?.version || state.adapter.version || null },
     vehicle: {
@@ -332,6 +335,32 @@ async function saveReport() {
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
 
+// ---------- Android app: paired-device picker ----------
+async function openNativePicker() {
+  const dlg = $("picker"), ul = $("picker-list"), msg = $("picker-msg");
+  ul.innerHTML = ""; msg.textContent = "Loading paired devices…";
+  dlg.showModal();
+  try {
+    const devs = await listPaired();
+    // Likely OBD adapters first: advertises the serial service, or has an OBD-ish name.
+    const score = (d) => (d.serial ? 0 : 2) + (/obd|elm|v-?link|vgate|scan/i.test(d.name) ? 0 : 1);
+    devs.sort((a, b) => score(a) - score(b) || a.name.localeCompare(b.name));
+    msg.textContent = devs.length ? "Pick your OBD adapter (usually “OBDII”):"
+      : "No paired devices. Pair the adapter in Android Settings → Connections → Bluetooth (PIN 1234), then try again.";
+    ul.innerHTML = devs.map((d, i) => `<li><button type="button" data-i="${i}">
+      <span>${esc(d.name)}</span><small>${esc(d.address)}${d.serial ? " · serial port" : ""}</small></button></li>`).join("");
+    ul.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+      const d = devs[+b.dataset.i];
+      try { localStorage.setItem(ADAPTER_KEY, d.address); } catch {}
+      dlg.close();
+      runLive(() => nativeTransport(d.address));
+    }));
+  } catch (e) {
+    msg.textContent = e.message || String(e);
+  }
+}
+$("picker-cancel").addEventListener("click", () => $("picker").close());
+
 // ---------- buttons ----------
 // Chrome builds differ in which Bluetooth devices the picker lists, so offer three ways to ask.
 const SEARCHES = {
@@ -344,14 +373,14 @@ async function pickAdapter(kind) {
   try {
     const port = await navigator.serial.requestPort(SEARCHES[kind]);
     $("pair-help").hidden = true;
-    runLive(port);
+    runLive(() => webSerialTransport(port));
   } catch (e) {
     // NotFoundError = picker closed without a choice (including "No compatible devices found").
     if (e.name === "NotFoundError") $("pair-help").hidden = false;
     else update({ connection: "error", message: `Could not open adapter: ${e.message}` });
   }
 }
-$("btn-connect").addEventListener("click", () => pickAdapter("default"));
+$("btn-connect").addEventListener("click", () => (NATIVE ? openNativePicker() : pickAdapter("default")));
 $("btn-search-spp").addEventListener("click", () => pickAdapter("spp"));
 $("btn-search-all").addEventListener("click", () => pickAdapter("all"));
 $("chrome-ver").textContent = (navigator.userAgent.match(/Chrome\/([\d.]+)/) || [, "unknown"])[1];
@@ -361,11 +390,16 @@ $("rescan").addEventListener("click", () => { dtcRequested = true; });
 $("btn-report").addEventListener("click", saveReport);
 
 // ---------- startup ----------
-if (!serialOK) {
+if (NATIVE) {
+  let saved = "";
+  try { saved = localStorage.getItem(ADAPTER_KEY) || ""; } catch {}
+  update({ message: saved ? "Reconnecting to your adapter…" : "Plug the adapter in, ignition ON, then tap CONNECT ADAPTER." });
+  if (saved) runLive(() => nativeTransport(saved));
+} else if (!serialOK) {
   update({ message: "This browser can't reach Bluetooth serial devices. Open in Chrome on Android (or desktop Chrome/Edge). Demo mode still works." });
 } else {
   update({ message: "Pair the adapter in Android Bluetooth settings first, ignition ON, then tap CONNECT ADAPTER." });
   // Reconnect automatically to an adapter granted in an earlier visit.
-  navigator.serial.getPorts().then((ports) => { if (ports.length === 1) runLive(ports[0]); });
+  navigator.serial.getPorts().then((ports) => { if (ports.length === 1) runLive(() => webSerialTransport(ports[0])); });
 }
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+if (!NATIVE && "serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});

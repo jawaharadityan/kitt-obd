@@ -1,0 +1,6 @@
+{
+  "appId": "io.github.jawaharadityan.kittobd",
+  "appName": "KITT OBD",
+  "webDir": "www",
+  "android": { "allowMixedContent": false }
+}

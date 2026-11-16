@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">KITT OBD</string>
+    <string name="title_activity_main">KITT OBD</string>
+    <string name="package_name">io.github.jawaharadityan.kittobd</string>
+    <string name="custom_url_scheme">io.github.jawaharadityan.kittobd</string>
+</resources>

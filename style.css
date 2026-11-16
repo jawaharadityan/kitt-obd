@@ -173,3 +173,13 @@ footer a { color: var(--muted); }
 .pair-help li { margin-bottom: 6px; }
 .pair-help b { color: var(--amber); font-weight: 600; }
 .dtc-desc small a { color: var(--amber); }
+
+.picker { background: #0d0b0b; color: var(--text); border: 1px solid var(--red-dim); border-radius: 12px;
+  width: min(92vw, 460px); padding: 18px; }
+.picker::backdrop { background: rgba(0,0,0,.7); }
+.picker h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: .25em; color: var(--red); }
+.picker .muted { font-size: 12px; line-height: 1.5; }
+.picker ul { list-style: none; margin: 10px 0 14px; padding: 0; display: grid; gap: 8px; max-height: 50vh; overflow: auto; }
+.picker li button { width: 100%; text-align: left; display: grid; gap: 4px; padding: 12px 14px; color: var(--text);
+  letter-spacing: .05em; font-size: 14px; min-height: 52px; }
+.picker li button small { color: var(--muted); font-size: 11px; letter-spacing: 0; }
