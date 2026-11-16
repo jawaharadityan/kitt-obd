@@ -168,3 +168,7 @@ footer a { color: var(--muted); }
 .muted-li { color: var(--muted) !important; border-left-color: #3a2a2a !important; background: #120c0c !important; }
 .make-note { margin: 8px 0 0; font-size: 11px; color: var(--amber); line-height: 1.5; }
 #btn-report { padding: 8px 14px; min-height: 36px; font-size: 11px; }
+
+.pair-help ol { margin: 0 0 14px; padding-left: 20px; font-size: 13px; line-height: 1.6; }
+.pair-help li { margin-bottom: 6px; }
+.pair-help b { color: var(--amber); font-weight: 600; }

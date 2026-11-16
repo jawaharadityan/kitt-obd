@@ -6,7 +6,7 @@ import { DemoVehicle } from "./demo.js";
 const $ = (id) => document.getElementById(id);
 const DTC_INTERVAL = 30000;
 const serialOK = "serial" in navigator;
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.3.0";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Friendlier labels for makes in the code database (value stays the database key).
 const MAKE_LABEL = { Suzuki: "Suzuki / Maruti Suzuki", Chevy: "Chevrolet" };
@@ -312,15 +312,28 @@ async function saveReport() {
 }
 
 // ---------- buttons ----------
-$("btn-connect").addEventListener("click", async () => {
+// Chrome builds differ in which Bluetooth devices the picker lists, so offer three ways to ask.
+const SEARCHES = {
+  default: { allowedBluetoothServiceClassIds: [SPP_UUID] },
+  spp: { filters: [{ bluetoothServiceClassId: SPP_UUID }], allowedBluetoothServiceClassIds: [SPP_UUID] },
+  all: undefined,
+};
+async function pickAdapter(kind) {
   if (!serialOK) return;
   try {
-    const port = await navigator.serial.requestPort({ allowedBluetoothServiceClassIds: [SPP_UUID] });
+    const port = await navigator.serial.requestPort(SEARCHES[kind]);
+    $("pair-help").hidden = true;
     runLive(port);
   } catch (e) {
-    if (e.name !== "NotFoundError") update({ connection: "error", message: `Could not open adapter: ${e.message}` });
+    // NotFoundError = picker closed without a choice (including "No compatible devices found").
+    if (e.name === "NotFoundError") $("pair-help").hidden = false;
+    else update({ connection: "error", message: `Could not open adapter: ${e.message}` });
   }
-});
+}
+$("btn-connect").addEventListener("click", () => pickAdapter("default"));
+$("btn-search-spp").addEventListener("click", () => pickAdapter("spp"));
+$("btn-search-all").addEventListener("click", () => pickAdapter("all"));
+$("chrome-ver").textContent = (navigator.userAgent.match(/Chrome\/([\d.]+)/) || [, "unknown"])[1];
 $("btn-demo").addEventListener("click", runDemo);
 $("btn-disconnect").addEventListener("click", () => stop());
 $("rescan").addEventListener("click", () => { dtcRequested = true; });

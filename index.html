@@ -45,6 +45,22 @@
     <button id="btn-demo" type="button">DEMO MODE</button>
   </section>
 
+  <section id="pair-help" class="card panel pair-help" hidden>
+    <h3>ADAPTER NOT LISTED?</h3>
+    <ol>
+      <li><b>Allow Nearby devices for Chrome:</b> Android Settings → Apps → Chrome → Permissions → <b>Nearby devices → Allow</b>.</li>
+      <li><b>Adapter powered and in range:</b> plugged into the car, ignition ON, phone in the car. Chrome may need to reach the adapter to see its serial service.</li>
+      <li><b>Paired in Android:</b> Settings → Connections → Bluetooth → <b>OBDII</b> listed under paired devices (PIN 1234).</li>
+      <li><b>Torque fully closed</b> (swipe it away from recent apps).</li>
+      <li>Then try the other search methods:</li>
+    </ol>
+    <div class="controls">
+      <button id="btn-search-spp" type="button">SEARCH SERIAL-PORT DEVICES</button>
+      <button id="btn-search-all" type="button">SHOW ALL PORTS</button>
+    </div>
+    <p class="muted">Chrome version: <span id="chrome-ver"></span></p>
+  </section>
+
   <div id="notice" class="notice" hidden><span class="dot amber"></span><span id="notice-text"></span></div>
 
   <section class="gauges">
