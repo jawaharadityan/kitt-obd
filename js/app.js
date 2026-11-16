@@ -6,10 +6,10 @@ import { DemoVehicle } from "./demo.js";
 const $ = (id) => document.getElementById(id);
 const DTC_INTERVAL = 30000;
 const serialOK = "serial" in navigator;
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Friendlier labels for makes in the code database (value stays the database key).
-const MAKE_LABEL = { Suzuki: "Suzuki / Maruti Suzuki", Chevy: "Chevrolet" };
+const MAKE_LABEL = { Suzuki: "Maruti Suzuki / Suzuki", Chevy: "Chevrolet" };
 const MAKE_NOTE = {
   Suzuki: "Only 16 Suzuki-specific codes are in the database. Most Maruti-specific codes (P1xxx etc.) will show a general description.",
   Kia: "Only 72 Kia-specific codes are in the database.",
@@ -50,10 +50,21 @@ const dtcPayload = (raw) => ({ stored: raw.stored, pending: raw.pending, read_at
 const MAKE_KEY = "kitt-obd-make";
 let make = "";
 try { make = localStorage.getItem(MAKE_KEY) || ""; } catch {}
+// Makes common in India first; the rest alphabetically.
+const PINNED_MAKES = ["Suzuki"];
 function fillMakes() {
-  const sel = $("make");
-  sel.innerHTML = `<option value="">Not set</option>` +
-    makes().map((m) => `<option value="${esc(m)}" ${m === make ? "selected" : ""}>${esc(MAKE_LABEL[m] || m)}</option>`).join("");
+  const all = makes();
+  if (!all.length) {
+    $("make").innerHTML = `<option value="">Not set</option>`;
+    $("make-note").textContent = "Fault-code database didn't load. Reconnect to the internet and pull down to reload once; it is then saved for offline use.";
+    $("make-note").hidden = false;
+    return;
+  }
+  const opt = (m) => `<option value="${esc(m)}" ${m === make ? "selected" : ""}>${esc(MAKE_LABEL[m] || m)}</option>`;
+  const pinned = PINNED_MAKES.filter((m) => all.includes(m));
+  $("make").innerHTML = `<option value="">Not set</option>` +
+    `<optgroup label="Common in India">${pinned.map(opt).join("")}</optgroup>` +
+    `<optgroup label="All makes">${all.filter((m) => !pinned.includes(m)).map(opt).join("")}</optgroup>`;
   renderMakeNote();
 }
 function renderMakeNote() {
